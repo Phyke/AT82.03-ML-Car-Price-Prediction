@@ -6,7 +6,7 @@ export const actions: Actions = {
 		const feature1 = formData.get('feature1');
 		const feature2 = formData.get('feature2');
 		// fetch to fastapi
-		const response = await fetch('http://localhost:8000/predict', {
+		const response = await fetch('http://backend:8000/predict', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
