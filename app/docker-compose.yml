@@ -2,10 +2,10 @@ services:
   frontend:
     build: ./frontend
     container_name: frontend
-    ports:
-      - "3000:3000"
+    # ports:
+    # - "3000:3000"
     environment:
-      - ORIGIN=http://localhost:3000
+      - ORIGIN=http://localhost
     depends_on:
       - backend
 
@@ -14,3 +14,12 @@ services:
     container_name: backend
     # ports:
     #   - "5000:5000"
+
+  nginx:
+    build: ./nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
