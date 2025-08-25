@@ -5,7 +5,7 @@ services:
     # ports:
     # - "3000:3000"
     environment:
-      - ORIGIN=http://localhost
+      - ORIGIN=http://localhost:8080
     depends_on:
       - backend
 
@@ -19,7 +19,7 @@ services:
     build: ./nginx
     container_name: nginx
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       - frontend
       - backend
