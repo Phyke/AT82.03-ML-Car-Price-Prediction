@@ -19,13 +19,13 @@ def read_root() -> dict[str, Any]:
 class RequestPredictModel(BaseModel):
     brand: str | None = None
     year: int | None = None
-    km_driven: int | None = None
+    km_driven: float | None = None
     fuel: str | None = None
     seller_type: str | None = None
     transmission: str | None = None
     owner: str | None = None
     mileage: float | None = None
-    engine: int | None = None
+    engine: float | None = None
     max_power: float | None = None
     seats: int | None = None
 

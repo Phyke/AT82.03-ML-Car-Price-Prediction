@@ -21,11 +21,13 @@ export const actions: Actions = {
 			seats: getOrNull('seats') !== null ? Number(getOrNull('seats')) : null
 		};
 
-		const missingFields = Object.entries(payload).filter(([_, v]) => v === null).map(([k]) => k);
+		const missingFields = Object.entries(payload)
+			.filter(([_, v]) => v === null)
+			.map(([k]) => k);
 		if (missingFields.length > 1) {
 			return {
 				success: false,
-				error: `Please fill all fields except one. You can leave only one field empty.`
+				error: `You can leave only one field empty.`
 			};
 		}
 
@@ -39,7 +41,7 @@ export const actions: Actions = {
 		const data = await response.json();
 		return {
 			success: true,
-			selling_price: data.selling_price,
+			selling_price: data.selling_price
 		};
 	}
 };
