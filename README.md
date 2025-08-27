@@ -1,5 +1,16 @@
 # AT82.03 Machine Learning
-## Car Price Prediction
+## A1: Car Price Prediction
+
+- Name: Prombot Cherdchoo
+- Student ID: st125923
+
+### Deriverables
+- `train_model.ipynb` - Jupyter Notebook with all the processes
+- `train_model.pdf` - PDF version of Jupyter Notebook generated via `nbconvert`
+- `app/` - Folder containing the app with `docker-compose.yml`
+  - `app/backend/` - Folder containing FastAPI backend server with `Dockerfile`
+  - `app/frontend/` - Folder containing Sveltekit frontend server with `Dockerfile`
+  - `app/nginx/` - Folder containing Nginx config file with `Dockerfile`
 
 ### How to run
 1. Build Docker Compose Stack
@@ -9,3 +20,8 @@ docker compose up --build
 ```
 
 2. Go to `http://localhost:8080`
+
+### Technology Stack
+- Frontend: Sveltekit
+- Backend: FastAPI
+- Deployment: Docker, Nginx
