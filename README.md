@@ -5,8 +5,8 @@
 - Student ID: st125923
 
 ### Deriverables
-- `train_model.ipynb` - Jupyter Notebook with all the processes
-- `train_model.pdf` - PDF version of Jupyter Notebook generated via `nbconvert`
+- `train_model.ipynb` - Jupyter Notebook with all the processes (This is the same file as `Prombot_st125923_A1.ipynb` on TEAL)
+- `train_model.pdf` - PDF version of Jupyter Notebook generated via `nbconvert` (This is the same file as `Prombot_st125923_A1.pdf` on TEAL)
 - `app/` - Folder containing the app with `docker-compose.yml`
   - `app/backend/` - Folder containing FastAPI backend server with `Dockerfile`
   - `app/frontend/` - Folder containing Sveltekit frontend server with `Dockerfile`
