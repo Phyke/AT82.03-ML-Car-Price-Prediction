@@ -6,4 +6,8 @@ ignore = [
     "PLR2004", # Magic number
     "D",       # Missing docstring
     "PTH",     # Pathlib should be used over os.path
+    "E741",    # Ambiguous variable name e.g. 'l'
+    "N803",    # Argument name should be lowercase (for X_train)
+    "N806",    # Variable in function should be lowercase (for X_train)
+    "NPY002",  # np.number is deprecated
 ]
