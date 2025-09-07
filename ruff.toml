@@ -1,4 +1,4 @@
-line-length = 100
+line-length = 120
 select = ["ALL"]
 ignore = [
     "ERA001",  # Commented out code
@@ -10,4 +10,6 @@ ignore = [
     "N803",    # Argument name should be lowercase (for X_train)
     "N806",    # Variable in function should be lowercase (for X_train)
     "NPY002",  # np.number is deprecated
+    "PLR0913", # Too many arguments
+    "PLC0415", # Import should be at the top of the file
 ]

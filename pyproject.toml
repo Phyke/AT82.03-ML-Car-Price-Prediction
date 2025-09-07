@@ -8,6 +8,7 @@ dependencies = [
     "fastapi>=0.116.1",
     "ipykernel>=6.30.1",
     "matplotlib>=3.10.5",
+    "mlflow>=3.3.2",
     "nbconvert>=7.16.6",
     "numpy>=2.3.2",
     "pandas>=2.3.1",
