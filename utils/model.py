@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Literal
 
 import mlflow
 import numpy as np
+import pandas as pd
 from numpy.typing import NDArray
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import KFold
 
 # np.number is a base class for all integers, floating numbers in numpy
@@ -17,6 +20,16 @@ type Scalar = int | float | np.integer | np.floating
 # Vector: TypeAlias = NDArray[np.integer | np.floating]
 # Matric: TypeAlias = NDArray[np.integer | np.floating]
 # Scalar: TypeAlias = int | float | np.integer | np.floating
+
+type TrainMethod = Literal["batch", "stochastic", "mini-batch"]
+type WeightInitMethod = Literal["zero", "xavier"]
+
+
+@dataclass
+class KFoldScore:
+    train_loss: float
+    val_loss: float
+    val_r2: float
 
 
 class BasePenalty(ABC):
@@ -75,11 +88,8 @@ class RidgePenalty(BasePenalty):
 #         l2_derivation = (1 - self.l_ratio) * RidgePenalty(1).derivation(theta)
 #         return self.l * (l1_derivation + l2_derivation)
 
-type TrainMethod = Literal["batch", "stochastic", "mini-batch"]
-type WeightInitMethod = Literal["zero", "xavier"]
 
-
-class LinearRegression:
+class LinearRegression(BaseEstimator, RegressorMixin):
     cv = KFold(n_splits=3, shuffle=True, random_state=42)
 
     def __init__(
@@ -91,6 +101,7 @@ class LinearRegression:
         lr: Scalar,
         num_epochs: int,
         batch_size: int | None,
+        params_for_logging: dict,
     ) -> None:
         if (train_method in {"batch", "stochastic"}) and batch_size is not None:
             print("Error: Batch size should be None for batch or stochastic gradient descent.")
@@ -109,6 +120,7 @@ class LinearRegression:
         self.lr = lr
         self.num_epochs = num_epochs
         self.batch_size = batch_size
+        self.params_for_logging = params_for_logging
 
     def mse(self, ytrue: Vector, ypred: Vector) -> Scalar:
         return ((ypred - ytrue) ** 2).sum() / ytrue.shape[0]
@@ -145,12 +157,13 @@ class LinearRegression:
 
     def fit(self, X_train: Matrix, y_train: Vector) -> None:
         # create a list of kfold scores
-        self.kfold_scores = []
+        self.kfold_scores: list[KFoldScore] = []
 
         # kfold.split in the sklearn.....
         for fold, (train_idx, val_idx) in enumerate(self.cv.split(X_train)):
             # reset val loss at the start of each fold, not outside the fold loop
             self.val_loss_old = np.inf
+            self.val_r2_old = -np.inf
 
             X_cross_train = X_train[train_idx]
             y_cross_train = y_train[train_idx]
@@ -175,6 +188,8 @@ class LinearRegression:
 
             # one epoch will exhaust the WHOLE training set
             with mlflow.start_run(run_name=f"Fold-{fold}", nested=True):
+                mlflow.log_params(self.params_for_logging)
+
                 for epoch in range(self.num_epochs):
                     # with replacement or no replacement
                     # with replacement means just randomize
@@ -186,39 +201,56 @@ class LinearRegression:
                     X_cross_train = X_cross_train[perm]
                     y_cross_train = y_cross_train[perm]
 
-                    if self.train_method == "stochastic":
-                        for batch_idx in range(X_cross_train.shape[0]):
-                            # (11,) ==> (1, 11) ==> (m, n)
-                            X_method_train = X_cross_train[batch_idx].reshape(1, -1)
-                            y_method_train = y_cross_train[batch_idx]
-                            train_loss = self._train(X_method_train, y_method_train)
-                    elif self.train_method == "mini-batch":
-                        for batch_idx in range(0, X_cross_train.shape[0], self.batch_size):
-                            # batch_idx = 0, 50, 100, 150
-                            X_method_train = X_cross_train[batch_idx : batch_idx + self.batch_size, :]
-                            y_method_train = y_cross_train[batch_idx : batch_idx + self.batch_size]
-                            train_loss = self._train(X_method_train, y_method_train)
-                    elif self.train_method == "batch":
-                        X_method_train = X_cross_train
-                        y_method_train = y_cross_train
-                        train_loss = self._train(X_method_train, y_method_train)
-                    else:
-                        print("Error: Please select correct training method.")
-                        return
-
-                    mlflow.log_metric(key="train_loss", value=train_loss, step=epoch)
+                    train_loss = self.start_training(X_cross_train, y_cross_train)
 
                     yhat_val = self.predict(X_cross_val, add_intercept=False)
                     val_loss_new = self.mse(y_cross_val, yhat_val)
-                    mlflow.log_metric(key="val_loss", value=val_loss_new, step=epoch)
+                    val_r2_new = self.r_squared(y_cross_val, yhat_val)
+                    mlflow.log_metrics(
+                        {
+                            "train_loss": train_loss,
+                            "val_loss": val_loss_new,
+                            "val_r2": val_r2_new,
+                        },
+                        step=epoch,
+                    )
 
                     # early stopping
                     if np.allclose(val_loss_new, self.val_loss_old):
                         break
                     self.val_loss_old = val_loss_new
+                    self.val_r2_old = val_r2_new
 
-                self.kfold_scores.append(val_loss_new)
+                self.kfold_scores.append(
+                    KFoldScore(
+                        train_loss=train_loss,
+                        val_loss=val_loss_new,
+                        val_r2=val_r2_new,
+                    ),
+                )
                 print(f"Fold {fold}: {val_loss_new}")
+
+    def start_training(self, X_train: Matrix, y_train: Vector) -> float:
+        if self.train_method == "stochastic":
+            for batch_idx in range(X_train.shape[0]):
+                # (11,) ==> (1, 11) ==> (m, n)
+                X_method_train = X_train[batch_idx].reshape(1, -1)
+                y_method_train = y_train[batch_idx]
+                train_loss = self._train(X_method_train, y_method_train)
+        elif self.train_method == "mini-batch":
+            for batch_idx in range(0, X_train.shape[0], self.batch_size):
+                # batch_idx = 0, 50, 100, 150
+                X_method_train = X_train[batch_idx : batch_idx + self.batch_size, :]
+                y_method_train = y_train[batch_idx : batch_idx + self.batch_size]
+                train_loss = self._train(X_method_train, y_method_train)
+        elif self.train_method == "batch":
+            X_method_train = X_train
+            y_method_train = y_train
+            train_loss = self._train(X_method_train, y_method_train)
+        else:
+            msg = "Error: Please select correct training method."
+            raise ValueError(msg)
+        return train_loss
 
     def _train(self, X: Matrix, y: Vector) -> Scalar:
         yhat = self.predict(X, add_intercept=False)
@@ -249,6 +281,28 @@ class LinearRegression:
     def _bias(self) -> Scalar:
         return self.theta[0]
 
+    def get_average_kfold_scores(self) -> KFoldScore:
+        # return the average of the kfold scores
+        return KFoldScore(**pd.DataFrame(self.kfold_scores).mean().to_dict())
+
+    def plot_feature_importance(self, feature_names: list[str]) -> None:
+        import matplotlib.pyplot as plt
+
+        coef = self._coef()
+        if len(coef) != len(feature_names):
+            print("Error: Length of feature names must match number of features.")
+            return
+
+        feature_importance = pd.Series(coef, index=feature_names).sort_values(ascending=False)
+
+        plt.figure(figsize=(10, 6))
+        feature_importance.plot(kind="barh")
+        plt.title("Feature Importance")
+        plt.ylabel("Coefficient Value")
+        plt.xlabel("Feature")
+        plt.tight_layout()
+        plt.show()
+
 
 class Lasso(LinearRegression):
     def __init__(
@@ -260,6 +314,7 @@ class Lasso(LinearRegression):
         lr: Scalar,
         num_epochs: int,
         batch_size: int | None,
+        params_for_logging: dict,
     ) -> None:
         super().__init__(
             regularization=LassoPenalty(l),
@@ -269,6 +324,7 @@ class Lasso(LinearRegression):
             lr=lr,
             num_epochs=num_epochs,
             batch_size=batch_size,
+            params_for_logging=params_for_logging,
         )
 
 
@@ -282,6 +338,7 @@ class Ridge(LinearRegression):
         lr: Scalar,
         num_epochs: int,
         batch_size: int | None,
+        params_for_logging: dict,
     ) -> None:
         super().__init__(
             regularization=RidgePenalty(l),
@@ -291,6 +348,7 @@ class Ridge(LinearRegression):
             lr=lr,
             num_epochs=num_epochs,
             batch_size=batch_size,
+            params_for_logging=params_for_logging,
         )
 
 
@@ -305,6 +363,7 @@ class Ridge(LinearRegression):
 #         lr: Scalar,
 #         num_epochs: int,
 #         batch_size: int | None,
+#         params_for_logging: dict,
 #     ) -> None:
 #         super().__init__(
 #             regularization=ElasticPenalty(l, l_ratio),
@@ -314,4 +373,5 @@ class Ridge(LinearRegression):
 #             lr=lr,
 #             num_epochs=num_epochs,
 #             batch_size=batch_size,
+#             params_for_logging=params_for_logging,
 #         )

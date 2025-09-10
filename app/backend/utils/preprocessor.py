@@ -2,10 +2,10 @@ import numpy as np
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, PolynomialFeatures, StandardScaler
 
 
-def get_preprocessor() -> ColumnTransformer:
+def get_preprocessor(polynomial_degree: int | None = None) -> ColumnTransformer:
     # Define transformers for each feature group
     brand_le = (
         "brand_le",
@@ -85,27 +85,30 @@ def get_preprocessor() -> ColumnTransformer:
         ["seller_type"],
     )
 
+    pipeline_steps = [
+        (
+            "imputer",
+            ColumnTransformer(
+                transformers=[
+                    ("year_imputer", SimpleImputer(strategy="median"), ["year"]),
+                    ("km_imputer", SimpleImputer(strategy="median"), ["km_driven"]),
+                    ("mileage_imputer", SimpleImputer(strategy="mean"), ["mileage"]),
+                    ("engine_imputer", SimpleImputer(strategy="median"), ["engine"]),
+                    ("max_power_imputer", SimpleImputer(strategy="median"), ["max_power"]),
+                    ("seats_imputer", SimpleImputer(strategy="most_frequent"), ["seats"]),
+                ],
+                remainder="passthrough",
+            ),
+        ),
+        ("scaler", StandardScaler()),
+    ]
+
+    if polynomial_degree is not None:
+        pipeline_steps.insert(-1, ("poly", PolynomialFeatures(degree=polynomial_degree, include_bias=False)))
+
     num_scaler = (
         "num_scaler",
-        Pipeline(
-            [
-                (
-                    "imputer",
-                    ColumnTransformer(
-                        transformers=[
-                            ("year_imputer", SimpleImputer(strategy="median"), ["year"]),
-                            ("km_imputer", SimpleImputer(strategy="median"), ["km_driven"]),
-                            ("mileage_imputer", SimpleImputer(strategy="mean"), ["mileage"]),
-                            ("engine_imputer", SimpleImputer(strategy="median"), ["engine"]),
-                            ("max_power_imputer", SimpleImputer(strategy="median"), ["max_power"]),
-                            ("seats_imputer", SimpleImputer(strategy="most_frequent"), ["seats"]),
-                        ],
-                        remainder="passthrough",
-                    ),
-                ),
-                ("scaler", StandardScaler()),
-            ],
-        ),
+        Pipeline(pipeline_steps),
         ["year", "km_driven", "mileage", "engine", "max_power", "seats"],
     )
 
