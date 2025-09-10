@@ -228,14 +228,16 @@ class LinearRegression(BaseEstimator, RegressorMixin):
                         val_r2=val_r2_new,
                     ),
                 )
-                print(f"Fold {fold}: {val_loss_new}")
+                print(f"Fold {fold} Train Loss: {train_loss}")
+                print(f"Fold {fold} Val Loss:   {val_loss_new}")
+                print(f"Fold {fold} Val R2:     {val_r2_new}")
 
     def start_training(self, X_train: Matrix, y_train: Vector) -> float:
         if self.train_method == "stochastic":
             for batch_idx in range(X_train.shape[0]):
                 # (11,) ==> (1, 11) ==> (m, n)
                 X_method_train = X_train[batch_idx].reshape(1, -1)
-                y_method_train = y_train[batch_idx]
+                y_method_train = y_train[batch_idx].reshape(1)  # So this has shape (1,) -> not scalar
                 train_loss = self._train(X_method_train, y_method_train)
         elif self.train_method == "mini-batch":
             for batch_idx in range(0, X_train.shape[0], self.batch_size):
