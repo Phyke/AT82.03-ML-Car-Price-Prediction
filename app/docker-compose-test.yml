@@ -1,6 +1,6 @@
 services:
   frontend:
-    build: ./frontend
+    image: phyke/ml2025-carprice-sveltekit
     ports:
     - "80:80"
     environment:
@@ -9,4 +9,4 @@ services:
       - backend
 
   backend:
-    build: ./backend
+    image: phyke/ml2025-carprice-fastapi

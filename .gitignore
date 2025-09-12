@@ -1,4 +1,5 @@
 mlruns/
+mlartifacts/
 
 # Python-generated files
 __pycache__/

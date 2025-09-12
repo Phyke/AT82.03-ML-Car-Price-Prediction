@@ -377,3 +377,26 @@ class Ridge(LinearRegression):
 #             batch_size=batch_size,
 #             params_for_logging=params_for_logging,
 #         )
+
+
+class LinearRegressionNoCV(LinearRegression):
+    def fit(self, X_train_ori: Matrix, y_train_ori: Vector) -> None:
+        X_train = X_train_ori.copy()
+        y_train = y_train_ori.copy()
+        X_train = self.add_intercept(X_train)
+
+        # initialize theta
+        self.weight_init(X_train)
+        self.prev_step = 0  # for momentum
+
+        # one epoch will exhaust the WHOLE training set
+
+        for _ in range(self.num_epochs):
+            perm = np.random.permutation(X_train.shape[0])
+
+            X_train = X_train[perm]
+            y_train = y_train[perm]
+
+            train_loss = self.start_training(X_train, y_train)
+
+        print(f"Last Train Loss: {train_loss}")

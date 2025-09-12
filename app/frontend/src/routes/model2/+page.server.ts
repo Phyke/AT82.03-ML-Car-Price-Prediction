@@ -1,4 +1,4 @@
-import type { Actions } from './$types';
+import type { Actions } from '../$types';
 
 export const actions: Actions = {
 	default: async ({ request }) => {
@@ -31,7 +31,7 @@ export const actions: Actions = {
 			};
 		}
 
-		const response = await fetch('http://backend:8000/predict', {
+		const response = await fetch('http://backend:8000/predict/a2', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
