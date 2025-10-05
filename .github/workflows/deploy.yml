@@ -41,7 +41,7 @@ jobs:
           MLFLOW_MODEL_URI: ${{ secrets.MLFLOW_MODEL_URI_STAGING }}
           MLFLOW_REGISTERED_MODEL_NAME: ${{ secrets.MLFLOW_REGISTERED_MODEL_NAME }}
         run: |
-          set -e
+          set -euxo pipefail
           cd app/backend
           cat > .env <<EOF
           MLFLOW_TRACKING_URI=$MLFLOW_TRACKING_URI
@@ -122,6 +122,7 @@ jobs:
           proxy_passphrase: ${{ secrets.PASSPHRASE }}
           source: "app/docker-compose-deploy.yml"
           target: "st125923/"
+          strip_components: 1
 
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@v1.0.0
