@@ -2,7 +2,7 @@ services:
   frontend:
     image: phyke/ml2025-carprice-sveltekit
     ports:
-    - "80:80"
+      - "80:80"
     environment:
       - ORIGIN=http://localhost:80
     depends_on:
@@ -10,3 +10,5 @@ services:
 
   backend:
     image: phyke/ml2025-carprice-fastapi
+    env_file:
+      - .env

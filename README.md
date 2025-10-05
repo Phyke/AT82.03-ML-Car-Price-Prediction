@@ -46,6 +46,7 @@ As I implemented all the A1, A2, A3 in the same repo, the last version is gonna 
 cd app
 docker compose up --build
 ```
+2. go to `http://localhost`
 
 ### App API
 #### Frontend
@@ -59,7 +60,7 @@ docker compose up --build
 - `POST /predict/a2` - Predict car price using Model from A2 (Linear Regression From Scratch)
 - `POST /predict/a3` - Predict car price using Model from A3 (Logistic Regression From Scratch)
 
-1. Go to `http://localhost`
+
 
 ### Technology Stack
 - Frontend: Sveltekit
