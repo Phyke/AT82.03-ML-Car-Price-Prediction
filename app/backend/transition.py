@@ -6,11 +6,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
-model_uri_staging = os.getenv("MLFLOW_MODEL_URI")
 registered_model_name = os.getenv("MLFLOW_REGISTERED_MODEL_NAME")
 
 assert tracking_uri is not None
-assert model_uri_staging is not None
+assert registered_model_name is not None
 
 
 def transition_model_to_production() -> None:
