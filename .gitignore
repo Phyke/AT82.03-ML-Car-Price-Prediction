@@ -1,5 +1,6 @@
 mlruns/
 mlartifacts/
+.env
 
 # Python-generated files
 __pycache__/

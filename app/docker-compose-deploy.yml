@@ -1,14 +1,15 @@
 services:
-
   backend:
     image: phyke/ml2025-carprice-fastapi
-  
+
   web:
     image: phyke/ml2025-carprice-sveltekit
     # ports:
     # - "80:80"
     environment:
       - ORIGIN=https://web-st125923.ml.brain.cs.ait.ac.th
+    env_file:
+      - .env
     depends_on:
       - backend
     labels:

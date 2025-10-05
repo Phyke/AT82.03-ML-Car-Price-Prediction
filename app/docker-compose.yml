@@ -2,7 +2,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-    - "80:80"
+      - "80:80"
     environment:
       - ORIGIN=http://localhost:80
     depends_on:
@@ -10,3 +10,5 @@ services:
 
   backend:
     build: ./backend
+    env_file:
+      - .env

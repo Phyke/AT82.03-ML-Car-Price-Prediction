@@ -12,4 +12,6 @@ ignore = [
     "NPY002",  # np.number is deprecated
     "PLR0913", # Too many arguments
     "PLC0415", # Import should be at the top of the file
+    "S101",    # Use of assert detected
+    "ANN",     # Missing type annotation (turn off for now, otherwise I can't log model to mlflow properly)
 ]
